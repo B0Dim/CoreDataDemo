@@ -24,7 +24,6 @@ class TaskListViewController: UITableViewController {
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: cellID)
         setupNavigationBar()
         fetchData()
-        tableView.reloadData()
     }
 
     private func setupNavigationBar() {
@@ -55,9 +54,7 @@ class TaskListViewController: UITableViewController {
     }
     
     @objc private func addNewTask() {
-        let taskVC = TaskViewController()
-        taskVC.delegate = self
-        present(taskVC, animated: true)
+        showAlert(with: "New Task", and: "What do you want to do?")
     }
     
     private func fetchData() {
@@ -69,11 +66,44 @@ class TaskListViewController: UITableViewController {
             print("Failed to fetch data", error)
         }
     }
+    
+    private func showAlert(with title: String, and message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        let saveAction = UIAlertAction(title: "Save", style: .default) { _ in
+            guard let task = alert.textFields?.first?.text, !task.isEmpty else { return }
+            self.save(task)
+        }
+        let cancelAction = UIAlertAction(title: "Cancel", style: .destructive)
+        alert.addAction(saveAction)
+        alert.addAction(cancelAction)
+        alert.addTextField { textField in
+            textField.placeholder = "New Task"
+        }
+        present(alert, animated: true)
+    }
+    
+    private func save(_ taskName: String) {
+        guard let entityDescription = NSEntityDescription.entity(forEntityName: "Task", in: context) else { return }
+        guard let task = NSManagedObject(entity: entityDescription, insertInto: context) as? Task else { return }
+        task.title = taskName
+        taskList.append(task)
+        
+        let cellIndex = IndexPath(row: taskList.count - 1, section: 0)
+        tableView.insertRows(at: [cellIndex], with: .automatic)
+        
+        if context.hasChanges {
+            do {
+                try context.save()
+            } catch let error {
+                print(error)
+            }
+        }
+    }
 }
 
 //MARK: - UITableViewDataSource
 extension TaskListViewController {
-    override func numberOfSections(in tableView: UITableView) -> Int {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         taskList.count
     }
     
