@@ -135,11 +135,12 @@ extension TaskListViewController {
     }
     
     private func makeEditContextualAction(forRowAt indexPath: IndexPath) -> UIContextualAction {
-        return UIContextualAction(style: .normal, title: "Edit") { (_, _, _) in
+        return UIContextualAction(style: .normal, title: "Edit") { (_, _, completion) in
             let task = self.taskList[indexPath.row]
             self.showAlert(with: task, title: "Edit Task") {
                 self.tableView.reloadRows(at: [indexPath], with: .automatic)
             }
+            completion(true)
         }
     }
 
