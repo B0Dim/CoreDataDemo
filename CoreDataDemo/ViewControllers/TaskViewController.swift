@@ -11,9 +11,7 @@ import CoreData
 class TaskViewController: UIViewController {
     
     var delegate: TaskViewControllerDelegate?
-    
-    private let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-    
+        
     private lazy var newTaskTextField: UITextField = {
         let textField = UITextField()
         textField.placeholder = "New task"
@@ -83,19 +81,11 @@ class TaskViewController: UIViewController {
     }
     
     @objc private func save() {
-        guard let entityDescription = NSEntityDescription.entity(forEntityName: "Task", in: context) else { return }
-        guard let task = NSManagedObject(entity: entityDescription, insertInto: context) as? Task else { return }
-        task.title = newTaskTextField.text
-        
-        if context.hasChanges {
-            do {
-                try context.save()
-            } catch let error {
-                print(error)
-            }
+        guard let title = newTaskTextField.text else { return }
+        StorageManager.shared.save(title) { _ in
+            self.delegate?.reloadData()
+            self.dismiss(animated: true)
         }
-        delegate?.reloadData()
-        dismiss(animated: true)
     }
     
     @objc private func cancel() {
